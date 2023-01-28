@@ -18,6 +18,9 @@ clock = pygame.time.Clock()
 background = pygame.image.load(path_file("background.jpg"))
 background = pygame.transform.scale(background, (WIN_WIDTH, WIN_HEIGHT))
 
+pygame.mixer.music.load(path_file("main_song.mp3"))
+pygame.mixer.music.set_volume(0.1)
+pygame.mixer.music.play(-1)
 
 game = True
 play = True
