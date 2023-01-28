@@ -22,6 +22,19 @@ pygame.mixer.music.load(path_file("main_song.mp3"))
 pygame.mixer.music.set_volume(0.1)
 pygame.mixer.music.play(-1)
 
+class GameSprite(pygame.sprite.Sprite):
+    def __init__(self, image, x, y, width, height, speed):
+        super().__init__()
+        self.image = pygame.image.load(path_file(image))
+        self.image = pygame.transform.scale(self.image, (width, height))
+        self.rect = self.image.get_rect()
+        self.rect.x = x
+        self.rect.y = y
+        self.speed = speed
+    def reset(self):
+        window.blit(self.image, (self.rect.x, self.rect.y))
+
+
 game = True
 play = True
 
