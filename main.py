@@ -24,6 +24,13 @@ pygame.mixer.music.load(path_file("main_song.mp3"))
 pygame.mixer.music.set_volume(0.1)
 pygame.mixer.music.play(-1)
 
+music_shoot = pygame.mixer.Sound(path_file("pew_sound.wav"))
+music_shoot.set_volume(0.1)
+music_win = pygame.mixer.Sound(path_file('win_sound.wav'))
+music_win.set_volume(0.1)
+music_loss = pygame.mixer.Sound(path_file('music_loss.wav'))
+music_loss.set_volume(0.1)
+
 class GameSprite(pygame.sprite.Sprite):
     def __init__(self, image, x, y, width, height, speed):
         super().__init__()
@@ -42,13 +49,30 @@ class Player(GameSprite):
         
     def update(self):
         keys = pygame.key.get_pressed()
-        if keys[pygame.K_LEFT] or keys[pygame.K_a]:
+        if (keys[pygame.K_LEFT] or keys[pygame.K_a]) and self.rect.left > 0:
             self.rect.x -= self.speed
 
-        if keys[pygame.K_RIGHT] or keys[pygame.K_d]:
+        if (keys[pygame.K_RIGHT] or keys[pygame.K_d]) and self.rect.right < WIN_WIDTH:
             self.rect.x += self.speed
+
+
     def fire(self):
-        pass
+        bullet = Bullet(path_file('bullet.png'), self.rect.centerx, self.rect.top, 20, 35, 3)
+        bullets.add(bullet)
+        music_shoot.play()
+        
+
+
+
+class Bullet(GameSprite):
+    def __init__(self, image, x, y, width, height, speed):
+        super().__init__(image, x, y, width, height, speed)
+
+    def update(self):
+        self.rect.y -= self.speed
+        if self.rect.bottom <= 0:
+            self.kill()
+
 
 
 class Enemy(GameSprite):
@@ -68,6 +92,8 @@ class Enemy(GameSprite):
 #! 1 - картинка, 2 - х, 3 - у, 4 - размер х, 5 - размер у, 6 - скорость
 player = Player(path_file("player.png"), 300, 400, 70, 100, 5)
 enemies = pygame.sprite.Group()
+bullets = pygame.sprite.Group()
+
 
 for i in range(5):
     enemy = Enemy(path_file('enemy1.png'), randint(0, WIN_WIDTH - 50), 0, 50, 50, randint(1, 3))
@@ -86,6 +112,10 @@ while game:
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             game = False
+        if event.type == pygame.KEYDOWN:
+            if event.key == pygame.K_SPACE:
+                player.fire()
+                
 
     if play == True:
         window.blit(background, (0, 0))
@@ -100,6 +130,38 @@ while game:
 
         enemies.draw(window)
         enemies.update()
+
+        bullets.draw(window)
+        bullets.update()
+
+        collide_bullets = pygame.sprite.groupcollide(enemies, bullets, False, True)
+        if collide_bullets:
+            for enemy in collide_bullets:
+                killed_enemies += 1
+                enemy.rect.bottom = 0
+                enemy.rect.x = randint(0, WIN_WIDTH - enemy.rect.width)
+                enemy.speed = randint(1, 3)
+
+        if missed_enemies >= 10 or pygame.sprite.spritecollide(player, enemies, True, False):
+            play = False
+            
+            txt_loose = font.render("вы проиграли!", True, WHITE)
+            window.blit(txt_loose, (250, 200))
+            music_loss.play()
+            pygame.mixer.music.stop()
+
+        if killed_enemies >= 5:
+            play = False
+            txt_win = font.render("вы выиграли!", True, WHITE)
+            window.blit(txt_win, (250, 200))
+            music_win.play()
+            pygame.mixer.music.stop()
+
+
+        
+
+            
+
 
     clock.tick(FPS)
     pygame.display.update()
